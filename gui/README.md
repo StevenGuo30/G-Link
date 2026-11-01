@@ -70,30 +70,16 @@ python3 gui/tests/artifacts.py
 私人包含真实配置，请勿上传公开仓库或 Releases。
 
 自检不改动系统代理。引擎测试使用临时配置和本机 HTTP 服务；实际管理员授权、不同网络服务以及目标应用联网，
-仍需要在目标 Mac 验证。GUI 预览可通过以下命令生成：
+仍需要在目标 Mac 验证。
 
-```bash
-dist/G-Link.app/Contents/MacOS/G-Link --render-previews /tmp/g-link-preview
-```
-
-## 独立设计预览
-
-构建后可生成一个不包含代理内核的预览应用。顶部工具栏可切换城市和开关效果，预览界面不会修改网络或读取节点配置。
-
-```bash
-bash gui/scripts/design-preview.sh
-open "dist/G-Link 设计预览.app"
-```
-
-四张背景基于提供的城市插画，通过内置 image_gen 提取透明建筑素材；不包含原图的天空和水面。
-素材及完整处理提示词位于 `docs/assets/cities/`。开启状态的呼吸光晕遵循 macOS「减少动态效果」设置。
+构建后预览：`bash gui/scripts/design-preview.sh && open "dist/G-Link 设计预览.app"`。
 
 ## 目录
 
 | 路径 | 内容 |
 | --- | --- |
 | `gui/Sources/` | SwiftUI 界面、配置管理、引擎和原生系统代理控制 |
-| `gui/scripts/` | 构建、打包、公开导出和独立设计预览 |
+| `gui/scripts/` | 构建、打包与公开导出 |
 | `gui/tests/` | 引擎与分发产物验证 |
 | `docs/` | 离线教程与配套素材 |
 | `bin/` | 官方 sing-box、校验值、许可证及对应版本源码 |
