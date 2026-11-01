@@ -7,7 +7,7 @@
 
 /* Large, unlabelled architectural backdrop, shared with the app. */
 .hero{position:relative;isolation:isolate;padding-top:74px;padding-bottom:90px;background:radial-gradient(ellipse at 90% 0%,#dce8f380,transparent 65%)}
-.hero::after{content:"";position:absolute;z-index:-1;inset:0;background:url("cityscape.svg") right bottom/auto 100% no-repeat;mask-image:linear-gradient(90deg,transparent 18%,#000 70%);pointer-events:none}
+.hero::after{content:"";position:absolute;z-index:-1;inset:0;background:url("cities/shanghai.png") right bottom/auto 100% no-repeat;mask-image:linear-gradient(90deg,transparent 18%,#000 70%);pointer-events:none}
 .hero-note{background:linear-gradient(135deg,#2e4d70f2,#233c5af5);box-shadow:0 12px 30px #233c5a0a}
 @media(max-width:780px){.hero{padding-top:40px;padding-bottom:40px}.hero::after{background-size:auto 90%;opacity:.7}}
 @media print{.hero{padding-top:30px;padding-bottom:35px}}

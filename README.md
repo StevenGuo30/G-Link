@@ -3,7 +3,7 @@
 **连接这件事，简单一点就好。**
 
 面向日常使用的 macOS 系统代理小应用。第一次导入配置，以后只需开启、关闭。
-SwiftUI 原生界面，冰蓝色天际线背景，每次启动随机更换城市。
+SwiftUI 原生界面，城市建筑插画背景，每次启动随机更换城市。开启时切换为深蓝光晕，关闭时恢复浅冰蓝。
 
 ![G-Link 界面](docs/assets/connection-off.png)
 
@@ -71,12 +71,24 @@ python3 gui/tests/artifacts.py
 dist/G-Link.app/Contents/MacOS/G-Link --render-previews /tmp/g-link-preview
 ```
 
+## 独立设计预览
+
+构建后可生成一个不包含代理内核的预览应用。顶部工具栏可切换城市和开关效果，预览界面不会修改网络或读取节点配置。
+
+```bash
+bash gui/scripts/design-preview.sh
+open "dist/G-Link 设计预览.app"
+```
+
+四张背景基于提供的城市插画，通过内置 image_gen 提取透明建筑素材；不包含原图的天空和水面。
+素材及完整处理提示词位于 `docs/assets/cities/`。开启状态的呼吸光晕遵循 macOS「减少动态效果」设置。
+
 ## 目录
 
 | 路径 | 内容 |
 | --- | --- |
 | `gui/Sources/` | SwiftUI 界面、配置管理、引擎和原生系统代理控制 |
-| `gui/scripts/` | 构建、打包、公开导出和天际线生成 |
+| `gui/scripts/` | 构建、打包、公开导出和独立设计预览 |
 | `gui/tests/` | 引擎与分发产物验证 |
 | `docs/` | 离线教程与配套素材 |
 | `bin/` | 官方 sing-box、校验值、许可证及对应版本源码 |

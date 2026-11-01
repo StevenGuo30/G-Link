@@ -42,7 +42,11 @@ struct QingLinkApp: App {
             do { try renderPreviews(to: URL(fileURLWithPath: args[index + 1]), city: city); exit(0) }
             catch { fputs("Preview failed: \(error)\n", stderr); exit(1) }
         }
-        QingLinkApp.main()
+        if args.contains("--design-preview") || Bundle.main.object(forInfoDictionaryKey: "GLinkDesignPreview") as? Bool == true {
+            DesignPreviewApp.main()
+        } else {
+            QingLinkApp.main()
+        }
     }
 }
 
@@ -76,6 +80,7 @@ func runEngineTest(root: URL, port: Int, target: String) throws {
         ("recovery", LinkState.recovery, Page.connection, 1)
     ] {
         let model = AppModel(preview: state, previewCity: city); model.page = page; model.setupStep = step
+        if state == .on { model.checkResult = "连接正常" }
         let view = RootView(model: model).frame(width: 880, height: 650)
         let renderer = ImageRenderer(content: view); renderer.scale = 2
         guard let image = renderer.nsImage, let tiff = image.tiffRepresentation,

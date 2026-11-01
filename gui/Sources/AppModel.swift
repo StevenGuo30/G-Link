@@ -30,6 +30,7 @@ private enum BackdropSession {
     let network: MacNetwork
     let presetURL: URL?
     let isPreview: Bool
+    let animatePreview: Bool
     let backdropCity: Int
     private var timer: Timer?
     private var mainWindow: NSWindow?
@@ -39,7 +40,8 @@ private enum BackdropSession {
     var installed: Bool { Bundle.main.bundleURL.deletingLastPathComponent().lastPathComponent == "Applications" }
     var appVersion: String { "0.1.3" }
 
-    init(preview: LinkState? = nil, previewCity: Int = 1) {
+    init(preview: LinkState? = nil, previewCity: Int = 1, animatePreview: Bool = false) {
+        self.animatePreview = animatePreview
         backdropCity = preview == nil ? BackdropSession.city : previewCity
         paths = .live
         let binary = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/sing-box")

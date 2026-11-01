@@ -23,6 +23,10 @@ assert not list(app.rglob("*.qinglink"))
 assert not list(app.rglob("config.json"))
 assert not list(app.rglob("维护手册.html"))
 assert (app / "Contents/Resources/docs/assets/connection-on.png").stat().st_size > 10000
+for city in ("shenzhen", "shanghai", "new-york", "chicago"):
+    asset = app / "Contents/Resources/docs/assets/cities" / (city + ".png")
+    data = asset.read_bytes()
+    assert data[:8] == b"\x89PNG\r\n\x1a\n" and data[25] == 6, "建筑素材应为 RGBA PNG"
 print("PASS：通用架构、本地签名、应用不含私人配置、教程素材存在")
 
 spec = importlib.util.spec_from_file_location("exporter", root / "gui/scripts/export-public.py")

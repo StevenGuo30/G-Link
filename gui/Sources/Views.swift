@@ -1,6 +1,8 @@
 import SwiftUI
 
 enum Palette {
+    static let midnight = Color(red: 0.035, green: 0.09, blue: 0.17)
+    static let electric = Color(red: 0.43, green: 0.76, blue: 1)
     static let paper = Color(red: 0.961, green: 0.973, blue: 0.984)
     static let navy = Color(red: 0.137, green: 0.235, blue: 0.353)
     static let blue = Color(red: 0.275, green: 0.427, blue: 0.612)
@@ -12,10 +14,11 @@ enum Palette {
 
 struct BrandMark: View {
     var size: CGFloat = 35
+    var illuminated = false
     var body: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: size * 0.29).fill(Palette.ice)
-            Image(systemName: "link").font(.system(size: size * 0.5, weight: .semibold)).rotationEffect(.degrees(-30)).foregroundStyle(Palette.navy)
+            RoundedRectangle(cornerRadius: size * 0.29).fill(illuminated ? Color.white.opacity(0.1) : Palette.ice)
+            Image(systemName: "link").font(.system(size: size * 0.5, weight: .semibold)).rotationEffect(.degrees(-30)).foregroundStyle(illuminated ? Color.white : Palette.navy)
         }.frame(width: size, height: size)
     }
 }
@@ -39,6 +42,7 @@ struct PrimaryButton: View {
 
 struct RootView: View {
     @ObservedObject var model: AppModel
+    private var illuminated: Bool { model.state == .on && model.page == .connection }
     var body: some View {
         HStack(spacing: 0) {
             sidebar
@@ -50,7 +54,7 @@ struct RootView: View {
                     ScrollView { pageContent }
                 }
                 Spacer(minLength: 12)
-            }.frame(width: model.isPreview ? 700 : nil).frame(maxWidth: .infinity, maxHeight: .infinity).background { ConnectionBackdrop(city: model.backdropCity) }
+            }.frame(width: model.isPreview ? 700 : nil).frame(maxWidth: .infinity, maxHeight: .infinity).background { ConnectionBackdrop(city: model.backdropCity, connected: illuminated) }
         }.foregroundStyle(Palette.ink).frame(minWidth: 820, minHeight: 600).preferredColorScheme(.light)
     }
     private var pageContent: some View {
@@ -70,7 +74,7 @@ struct RootView: View {
     }
     private var sidebar: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) { BrandMark(size: 30); Text("G-Link").font(.system(size: 22, weight: .semibold)).tracking(-0.6).fixedSize() }
+            HStack(spacing: 8) { BrandMark(size: 30, illuminated: illuminated); Text("G-Link").font(.system(size: 22, weight: .semibold)).tracking(-0.6).fixedSize() }
                 .padding(.top, 37).padding(.bottom, 44)
             ForEach(Page.allCases, id: \.self) { page in
                 Button { model.page = page } label: {
@@ -79,22 +83,22 @@ struct RootView: View {
                         Text(page.rawValue).font(.system(size: 13, weight: .medium)).lineLimit(1).fixedSize()
                         Spacer(minLength: 0)
                     }.padding(.horizontal, 13).frame(height: 43)
-                        .background(model.page == page ? Palette.navy.opacity(0.08) : .clear, in: RoundedRectangle(cornerRadius: 10))
-                        .foregroundStyle(model.page == page ? Palette.navy : Palette.secondary)
+                        .background(model.page == page ? (illuminated ? Color.white.opacity(0.1) : Palette.navy.opacity(0.08)) : .clear, in: RoundedRectangle(cornerRadius: 10))
+                        .foregroundStyle(illuminated ? Color.white.opacity(model.page == page ? 0.95 : 0.5) : (model.page == page ? Palette.navy : Palette.secondary))
                 }.buttonStyle(.plain).padding(.bottom, 6)
             }
             Spacer()
-            Text(model.appVersion).font(.system(size: 10)).foregroundStyle(Palette.secondary).padding(.leading, 12).padding(.bottom, 28)
-        }.padding(.horizontal, 19).frame(width: 180).frame(maxHeight: .infinity).foregroundStyle(Palette.ink)
-            .background(LinearGradient(colors: [Palette.ice, Palette.ice.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing))
-            .overlay(alignment: .trailing) { Rectangle().fill(Color.white.opacity(0.65)).frame(width: 1) }
+            Text(model.appVersion).font(.system(size: 10)).foregroundStyle(illuminated ? Color.white.opacity(0.4) : Palette.secondary).padding(.leading, 12).padding(.bottom, 28)
+        }.padding(.horizontal, 19).frame(width: 180).frame(maxHeight: .infinity).foregroundStyle(illuminated ? Color.white : Palette.ink)
+            .background(LinearGradient(colors: illuminated ? [Color(red: 0.06, green: 0.14, blue: 0.24), Palette.midnight] : [Palette.ice, Palette.ice.opacity(0.55)], startPoint: .topLeading, endPoint: .bottomTrailing))
+            .overlay(alignment: .trailing) { Rectangle().fill(Color.white.opacity(illuminated ? 0.08 : 0.65)).frame(width: 1) }
     }
     private var header: some View {
         HStack(alignment: .firstTextBaseline) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(model.page.rawValue).font(.system(size: 25, weight: .semibold))
+                Text(model.page.rawValue).font(.system(size: 25, weight: .semibold)).foregroundStyle(illuminated ? Color.white.opacity(0.94) : Palette.ink)
                 Text("连接这件事，简单一点就好。")
-                    .font(.system(size: 11)).tracking(1).foregroundStyle(Palette.secondary)
+                    .font(.system(size: 11)).tracking(1).foregroundStyle(illuminated ? Color.white.opacity(0.55) : Palette.secondary)
             }
             Spacer()
         }.padding(.horizontal, 34).padding(.top, 34).padding(.bottom, 23)
@@ -120,36 +124,40 @@ struct ConnectionView: View {
         default: return nil
         }
     }
+    private var connected: Bool { model.state == .on }
     var body: some View {
-        VStack(spacing: 20) {
-            VStack(spacing: 20) {
-                ZStack {
-                    Circle().fill(LinearGradient(colors: [.white, Palette.ice.opacity(model.state == .on ? 1 : 0.45)], startPoint: .topLeading, endPoint: .bottomTrailing)).frame(width: 112, height: 112)
-                        .overlay(Circle().stroke(Palette.blue.opacity(0.12), lineWidth: 1))
-                        .shadow(color: Palette.blue.opacity(0.06), radius: 14, x: 0, y: 7)
-                    Circle().stroke(Palette.blue.opacity(0.08), lineWidth: 1).frame(width: 132, height: 132)
-                    if model.busy { ProgressView().controlSize(.large).tint(Palette.blue) }
-                    else { Image(systemName: model.state == .on ? "checkmark" : model.state == .recovery ? "arrow.counterclockwise" : "power").font(.system(size: 40, weight: .light)).foregroundStyle(Palette.blue) }
-                }.frame(height: 132).padding(.top, 4)
-                Text(title).font(.system(size: 27, weight: .semibold))
-                if let hint { Text(hint).font(.system(size: 12)).foregroundStyle(Palette.secondary).multilineTextAlignment(.center) }
-                PrimaryButton(title: model.state == .on ? "关闭" : model.state == .recovery ? "恢复连接" : model.state == .unconfigured ? "开始设置" : "开启",
-                              symbol: model.state == .recovery ? "arrow.counterclockwise" : model.state == .unconfigured ? "arrow.right" : "power",
-                              muted: model.state == .on) { model.toggle() }
-                    .disabled(model.busy).opacity(model.busy ? 0.5 : 1).padding(.top, 5).padding(.bottom, 8)
-            }.padding(24).frame(maxWidth: 350).background(Color.white.opacity(0.82), in: RoundedRectangle(cornerRadius: 24))
-                .overlay(RoundedRectangle(cornerRadius: 24).stroke(Color.white.opacity(0.9), lineWidth: 1))
-                .shadow(color: Palette.navy.opacity(0.035), radius: 22, x: 0, y: 10)
-                .frame(maxWidth: .infinity)
-            if model.state == .on {
-                HStack(alignment: .top, spacing: 12) {
-                    Text(model.checking ? "正在检查连接…" : model.checkResult ?? "")
-                        .font(.system(size: 12)).foregroundStyle(Palette.secondary).fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 12)
-                    Button("检查连接") { model.diagnose() }.buttonStyle(.plain).font(.system(size: 12, weight: .medium)).foregroundStyle(Palette.blue).disabled(model.checking)
-                }.padding(13).background(Color.white.opacity(0.9), in: RoundedRectangle(cornerRadius: 12))
+        VStack(spacing: 12) {
+            ConnectionOrb(connected: connected, busy: model.busy, recovery: model.state == .recovery, animate: !model.isPreview || model.animatePreview)
+                .padding(.top, 3)
+            Text(title).font(.system(size: connected ? 37 : 31, weight: .medium)).tracking(2)
+                .foregroundStyle(connected ? Color.white : Palette.ink)
+                .shadow(color: connected ? Palette.electric.opacity(0.22) : .clear, radius: 18)
+            if let hint {
+                Text(hint).font(.system(size: 12)).foregroundStyle(Palette.secondary)
+                    .multilineTextAlignment(.center).padding(.horizontal, 20)
             }
-        }
+            Button { model.toggle() } label: {
+                HStack(spacing: 13) {
+                    Text(connected ? "关闭" : model.state == .recovery ? "恢复连接" : model.state == .unconfigured ? "开始设置" : "开启")
+                    Image(systemName: model.state == .unconfigured ? "arrow.right" : model.state == .recovery ? "arrow.counterclockwise" : "power")
+                }.font(.system(size: 14, weight: .medium)).padding(.horizontal, 27).frame(height: 43)
+                    .foregroundStyle(connected ? Color.white : Palette.navy)
+                    .background(connected ? Color.white.opacity(0.09) : Color.white.opacity(0.88), in: Capsule())
+                    .overlay(Capsule().stroke(connected ? Color.white.opacity(0.3) : Palette.line, lineWidth: 1))
+                    .contentShape(Capsule())
+            }.buttonStyle(.plain).disabled(model.busy).opacity(model.busy ? 0.5 : 1).padding(.top, 8)
+            if connected {
+                HStack(spacing: 12) {
+                    if model.checking { ProgressView().controlSize(.mini).tint(.white) }
+                    Text(model.checking ? "正在检查连接…" : model.checkResult ?? "")
+                        .font(.system(size: 11)).foregroundStyle(Color.white.opacity(0.72))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Button("检查连接") { model.diagnose() }
+                        .buttonStyle(.plain).font(.system(size: 11)).foregroundStyle(Palette.electric).disabled(model.checking)
+                }.padding(.horizontal, 16).padding(.vertical, 9)
+                    .background(Palette.midnight.opacity(0.4), in: Capsule()).padding(.top, 4)
+            }
+        }.frame(maxWidth: .infinity)
     }
 }
 

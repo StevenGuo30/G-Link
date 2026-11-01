@@ -28,9 +28,10 @@ cp "$ROOT/bin/sing-box-source-v1.13.8.tar.gz" "$APP/Contents/Resources/sing-box-
 cp "$ROOT/bin/LICENSE-sing-box.txt" "$APP/Contents/Resources/LICENSE-sing-box.txt"
 cp "$ROOT/bin/来源说明.md" "$APP/Contents/Resources/SING-BOX-SOURCE.md"
 "$APP/Contents/MacOS/G-Link" --self-test
+/usr/bin/ditto "$ROOT/docs/assets/cities" "$APP/Contents/Resources/docs/assets/cities"
 "$APP/Contents/MacOS/G-Link" --render-previews "$ROOT/docs/assets"
 cp "$ROOT/docs/使用指南.html" "$APP/Contents/Resources/docs/使用指南.html"
-cp "$ROOT/docs/assets/"*.css "$ROOT/docs/assets/"*.js "$ROOT/docs/assets/"*.png "$ROOT/docs/assets/"*.svg "$APP/Contents/Resources/docs/assets/"
+cp "$ROOT/docs/assets/"*.css "$ROOT/docs/assets/"*.js "$ROOT/docs/assets/"*.png "$APP/Contents/Resources/docs/assets/"
 /usr/bin/xcrun swift "$ROOT/gui/scripts/icon.swift" "$BUILD"
 /usr/bin/iconutil -c icns "$BUILD/AppIcon.iconset" -o "$APP/Contents/Resources/AppIcon.icns"
 /usr/bin/codesign --force --sign - "$APP"
