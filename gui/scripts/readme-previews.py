@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Render offline UI states and encode looping README demos (requires ffmpeg)."""
+"""Render offline UI states into one looping README demo (requires ffmpeg)."""
 import os
 from pathlib import Path
 import shutil
@@ -10,13 +10,13 @@ ROOT = Path(__file__).resolve().parents[2]
 DIST = Path(os.environ.get("GLINK_DIST_DIR", ROOT / "dist"))
 APP = DIST / "G-Link.app/Contents/MacOS/G-Link"
 OUTPUT = ROOT / "docs/assets/demos"
-FPS = 12
+FPS = 10
 
 
 def animate(frames, destination, width, temporary):
     # Return to the first frame before the loop restarts, avoiding a hard cut.
     frames = [*frames, frames[0]]
-    hold, fade = 2.2, 0.6
+    hold, fade = 1.8, 0.5
     args = ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y"]
     filters = []
     for i, frame in enumerate(frames):
@@ -36,8 +36,8 @@ def animate(frames, destination, width, temporary):
     staged = temporary / destination.name
     subprocess.run(args + ["-filter_complex_threads", "1", "-filter_complex", ";".join(filters),
                            "-map", "[out]", "-an", "-loop", "0", str(staged)], check=True)
-    if staged.stat().st_size > 5_000_000:
-        raise SystemExit(f"Preview exceeds 5 MB: {destination.name}")
+    if staged.stat().st_size > 8_000_000:
+        raise SystemExit(f"Preview exceeds 8 MB: {destination.name}")
     os.replace(staged, destination)
     print(f"Created {destination.relative_to(ROOT)} ({destination.stat().st_size / 1_000_000:.2f} MB)", flush=True)
 
@@ -51,17 +51,14 @@ def main():
     with tempfile.TemporaryDirectory(prefix="glink-readme-", dir=DIST) as tmp:
         temporary = Path(tmp)
         cities = []
-        # Shanghai → Shenzhen → New York → Chicago. These are preview models;
+        # Shanghai → Shenzhen → Chicago → New York. These are preview models;
         # rendering does not read personal config or enable any system proxy.
-        for city in (1, 0, 2, 3):
+        for city in (1, 0, 3, 2):
             directory = temporary / str(city)
             subprocess.run([str(APP), "--render-previews", str(directory), "--preview-city", str(city)], check=True)
             cities.append(directory)
-        animate([cities[0] / "connection-off.png", cities[0] / "connection-on.png"],
+        animate([city / f"connection-{state}.png" for city in cities for state in ("on", "off")],
                 OUTPUT / "connection.gif", 880, temporary)
-        for state in ("off", "on"):
-            animate([city / f"connection-{state}.png" for city in cities],
-                    OUTPUT / f"cities-{state}.gif", 704, temporary)
 
 
 if __name__ == "__main__":
