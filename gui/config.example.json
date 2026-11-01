@@ -1,0 +1,9 @@
+{
+  "log": {"level": "info", "timestamp": true},
+  "inbounds": [{"type": "mixed", "listen": "127.0.0.1", "listen_port": 7890}],
+  "outbounds": [
+    {"type": "socks", "tag": "proxy", "server": "proxy.example.invalid", "server_port": 1080, "version": "5"},
+    {"type": "direct", "tag": "direct"}
+  ],
+  "route": {"final": "proxy"}
+}

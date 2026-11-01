@@ -1,0 +1,26 @@
+# Local configuration and credentials
+/config/
+/private/
+/runtime/
+*.qinglink
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+*.mobileprovision
+
+# Build products and local archives
+/dist/
+/gui/.build/
+*.app/
+*.zip
+*.zip.tmp
+*.dmg
+*.log
+*.pid
+__pycache__/
+*.py[cod]
+.DS_Store

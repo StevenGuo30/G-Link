@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>G-Link</string>
+<key>CFBundleIdentifier</key><string>local.qinglink.desktop</string>
+<key>CFBundleName</key><string>G-Link</string>
+<key>CFBundleDisplayName</key><string>G-Link</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>CFBundleShortVersionString</key><string>0.1.3</string>
+<key>CFBundleVersion</key><string>4</string>
+<key>CFBundleIconFile</key><string>AppIcon</string>
+<key>LSMinimumSystemVersion</key><string>13.0</string>
+<key>NSHighResolutionCapable</key><true/>
+<key>NSPrincipalClass</key><string>NSApplication</string>
+<key>NSHumanReadableCopyright</key><string>G-Link · Local network companion. Includes sing-box under GPL-3.0.</string>
+<key>CFBundleDocumentTypes</key><array><dict><key>CFBundleTypeName</key><string>G-Link连接配置</string><key>CFBundleTypeRole</key><string>Viewer</string><key>LSItemContentTypes</key><array><string>local.qinglink.configuration</string></array></dict></array>
+<key>UTExportedTypeDeclarations</key><array><dict><key>UTTypeIdentifier</key><string>local.qinglink.configuration</string><key>UTTypeDescription</key><string>G-Link连接配置</string><key>UTTypeConformsTo</key><array><string>public.json</string></array><key>UTTypeTagSpecification</key><dict><key>public.filename-extension</key><array><string>qinglink</string></array></dict></dict></array>
+</dict></plist>
