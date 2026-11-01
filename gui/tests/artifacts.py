@@ -10,7 +10,8 @@ import tempfile
 import zipfile
 
 root = Path(__file__).resolve().parents[2]
-app = root / "dist/G-Link.app"
+dist = Path(os.environ.get("GLINK_DIST_DIR", root / "dist"))
+app = dist / "G-Link.app"
 subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(app)], check=True)
 for name in ("MacOS/G-Link", "Helpers/sing-box"):
     architectures = subprocess.check_output(["/usr/bin/lipo", "-archs", str(app / "Contents" / name)], text=True)
@@ -34,7 +35,7 @@ exporter = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(exporter)
 secrets = exporter.private_values()
 for name in ("G-Link-公开应用.zip", "G-Link-公开源码.zip"):
-    with zipfile.ZipFile(root / "dist" / name) as archive:
+    with zipfile.ZipFile(dist / name) as archive:
         for item in archive.infolist():
             assert "维护手册" not in item.filename and "/private/" not in item.filename
             assert not item.filename.endswith(".qinglink")
@@ -42,7 +43,7 @@ for name in ("G-Link-公开应用.zip", "G-Link-公开源码.zip"):
             assert not any(secret in data for secret in secrets), f"私人内容泄漏：{item.filename}"
     print(f"PASS：{name} 不含私人节点与个人手册")
 
-private = root / "dist/G-Link-私人分享.zip"
+private = dist / "G-Link-私人分享.zip"
 if private.exists():
     with zipfile.ZipFile(private) as archive:
         configurations = [n for n in archive.namelist() if n.endswith("/连接配置.qinglink") and not n.startswith("__MACOSX/")]
@@ -56,7 +57,7 @@ if private.exists():
 
 # macOS 解压后保留签名和可执行权限。
 with tempfile.TemporaryDirectory(prefix="qinglink-unzip-") as temporary:
-    subprocess.run(["/usr/bin/ditto", "-x", "-k", str(root / "dist/G-Link-公开应用.zip"), temporary], check=True)
+    subprocess.run(["/usr/bin/ditto", "-x", "-k", str(dist / "G-Link-公开应用.zip"), temporary], check=True)
     unpacked = Path(temporary) / "G-Link/G-Link.app"
     subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(unpacked)], check=True)
     subprocess.run([str(unpacked / "Contents/MacOS/G-Link"), "--self-test"], check=True, stdout=subprocess.DEVNULL)

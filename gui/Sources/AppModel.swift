@@ -38,7 +38,7 @@ private enum BackdropSession {
     var hasConfig: Bool { config != nil }
     var hasPreset: Bool { presetURL != nil }
     var installed: Bool { Bundle.main.bundleURL.deletingLastPathComponent().lastPathComponent == "Applications" }
-    var appVersion: String { "0.1.4" }
+    var appVersion: String { "0.1.5" }
 
     init(preview: LinkState? = nil, previewCity: Int = 1, animatePreview: Bool = false) {
         self.animatePreview = animatePreview
@@ -63,8 +63,9 @@ private enum BackdropSession {
     func refresh() {
         guard !busy && !isPreview else { return }
         config = (try? Data(contentsOf: paths.config)).flatMap { try? ConnectionConfig.parse($0) }
-        if network.hasBackup {
-            state = engine.isRunning() && config.map { network.systemUses(port: $0.port) } == true ? .on : .recovery
+        let running = engine.isRunning()
+        if network.hasBackup || running {
+            state = network.hasBackup && running && config.map { network.systemUses(port: $0.port) } == true ? .on : .recovery
         } else { state = config == nil ? .unconfigured : .off }
     }
     func toggle() {

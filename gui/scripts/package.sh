@@ -3,10 +3,11 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd -P)"
 mode="${1:-public}"
 case "$mode" in public|private) ;; *) echo '用法：package.sh public|private' >&2; exit 2;; esac
-APP="$ROOT/dist/G-Link.app"
+DIST="${GLINK_DIST_DIR:-$ROOT/dist}"
+APP="$DIST/G-Link.app"
 [[ -d "$APP" ]] || { echo '请先运行 bash gui/scripts/build.sh' >&2; exit 1; }
 /usr/bin/codesign --verify --deep --strict "$APP"
-stage="$(mktemp -d "$ROOT/dist/.qinglink-package.XXXXXX")"
+stage="$(mktemp -d "$DIST/.qinglink-package.XXXXXX")"
 trap 'rm -rf "$stage"' EXIT
 folder="$stage/G-Link"
 mkdir -p "$folder"
@@ -36,6 +37,6 @@ with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED) as archive:
             archive.write(path, Path(folder.name) / path.relative_to(folder))
 PY
 chmod 600 "$stage/$name"
-mv -f "$stage/$name" "$ROOT/dist/$name"
-printf '已生成：%s\n' "$ROOT/dist/$name"
+mv -f "$stage/$name" "$DIST/$name"
+printf '已生成：%s\n' "$DIST/$name"
 if [[ "$mode" == private ]]; then printf '含真实连接配置，仅私下分享；不含私人维护手册。\n'; fi

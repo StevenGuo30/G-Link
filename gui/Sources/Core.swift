@@ -70,6 +70,60 @@ func command(_ executable: String, _ args: [String], timeout: TimeInterval = 15)
     return CommandResult(status: task.terminationStatus, output: String(data: data, encoding: .utf8) ?? "")
 }
 
+// Read kernel data instead of `ps command=`: Finder-launched apps may have a C
+// locale, in which ps escapes Chinese paths and ownership checks silently fail.
+private struct EngineProcess {
+    let pid: Int32
+    let binary: String
+
+    static func read(_ pid: Int32, config: URL) -> EngineProcess? {
+        guard pid > 1 else { return nil }
+        var info = proc_bsdinfo()
+        guard proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &info, Int32(MemoryLayout<proc_bsdinfo>.size)) == MemoryLayout<proc_bsdinfo>.size,
+              info.pbi_uid == getuid(), info.pbi_status != SZOMB else { return nil }
+        var path = [CChar](repeating: 0, count: Int(4 * MAXPATHLEN))
+        guard proc_pidpath(pid, &path, UInt32(path.count)) > 0 else { return nil }
+        let binary = String(cString: path)
+        guard binary.hasSuffix("/Contents/Helpers/sing-box") else { return nil }
+
+        // KERN_PROCARGS2 contains argc, executable path, padding, then argv.
+        // Decode only argv; never retain or log the following environment data.
+        var mib: [Int32] = [CTL_KERN, KERN_PROCARGS2, pid]
+        var size = 0
+        guard sysctl(&mib, 3, nil, &size, nil, 0) == 0,
+              size > MemoryLayout<Int32>.size, size <= 4_194_304 else { return nil }
+        var bytes = [UInt8](repeating: 0, count: size)
+        guard sysctl(&mib, 3, &bytes, &size, nil, 0) == 0 else { return nil }
+        bytes = Array(bytes.prefix(size))
+        guard bytes.count > MemoryLayout<Int32>.size else { return nil }
+        var argc: Int32 = 0
+        _ = withUnsafeMutableBytes(of: &argc) { bytes.prefix(4).copyBytes(to: $0) }
+        guard argc == 4 else { return nil }
+        var offset = MemoryLayout<Int32>.size
+        guard let executableEnd = bytes[offset...].firstIndex(of: 0) else { return nil }
+        offset = executableEnd
+        while offset < bytes.count && bytes[offset] == 0 { offset += 1 }
+        var arguments: [String] = []
+        for _ in 0..<argc {
+            guard offset < bytes.count, let end = bytes[offset...].firstIndex(of: 0),
+                  let value = String(bytes: bytes[offset..<end], encoding: .utf8) else { return nil }
+            arguments.append(value); offset = end + 1
+        }
+        guard arguments[1] == "run", arguments[2] == "-c", arguments[3].hasPrefix("/"),
+              URL(fileURLWithPath: arguments[3]).resolvingSymlinksInPath().standardizedFileURL == config.resolvingSymlinksInPath().standardizedFileURL else { return nil }
+        return EngineProcess(pid: pid, binary: binary)
+    }
+
+    static func candidates() -> [Int32] {
+        let size = proc_listpids(UInt32(PROC_UID_ONLY), getuid(), nil, 0)
+        guard size > 0 else { return [] }
+        var pids = [Int32](repeating: 0, count: Int(size) / MemoryLayout<Int32>.size + 64)
+        let read = proc_listpids(UInt32(PROC_UID_ONLY), getuid(), &pids, Int32(pids.count * MemoryLayout<Int32>.size))
+        guard read > 0 else { return [] }
+        return Array(pids.prefix(Int(read) / MemoryLayout<Int32>.size)).filter { $0 > 1 }
+    }
+}
+
 final class Engine {
     let paths: AppPaths
     let executable: URL
@@ -85,23 +139,21 @@ final class Engine {
         return config
     }
     func ownedPID() -> Int32? {
-        guard let data = try? Data(contentsOf: paths.pid),
-              let info = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
-              let pid = info["pid"] as? Int32, pid > 1,
-              let binary = info["binary"] as? String,
-              binary.hasSuffix("/Contents/Helpers/sing-box"),
-              kill(pid, 0) == 0,
-              let owner = try? command("/bin/ps", ["-p", String(pid), "-o", "uid="]),
-              owner.output.trimmingCharacters(in: .whitespacesAndNewlines) == String(getuid()),
-              let result = try? command("/bin/ps", ["-ww", "-p", String(pid), "-o", "command="]),
-              result.output.trimmingCharacters(in: .whitespacesAndNewlines) == "\(binary) run -c \(paths.config.path)"
-        else { return nil }
-        return pid
+        if let data = try? Data(contentsOf: paths.pid),
+           let info = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+           let pid = info["pid"] as? Int32,
+           EngineProcess.read(pid, config: paths.config) != nil { return pid }
+        // The GUI may have died before saving its PID, or an older recovery may
+        // have deleted it. Reconcile only this user's helper with this config.
+        return EngineProcess.candidates().first { EngineProcess.read($0, config: paths.config) != nil }
     }
     func isRunning() -> Bool { ownedPID() != nil }
     func start() throws -> ConnectionConfig {
         let config = try validate(paths.config)
-        if isRunning() { return config }
+        if let pid = ownedPID(), let process = EngineProcess.read(pid, config: paths.config) {
+            try paths.save(JSONSerialization.data(withJSONObject: ["pid": pid, "binary": process.binary]), to: paths.pid)
+            return config
+        }
         let check = try command("/usr/sbin/lsof", ["-nP", "-iTCP:\(config.port)", "-sTCP:LISTEN", "-t"])
         guard check.output.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw LinkError.message("端口 \(config.port) 正被另一个代理占用。请先关闭旧工具包（04）或其他代理软件，再开启G-Link。")
@@ -136,10 +188,15 @@ final class Engine {
         }
     }
     func stop() throws {
-        guard let pid = ownedPID() else { try? FileManager.default.removeItem(at: paths.pid); return }
-        kill(pid, SIGTERM)
+        let pids = EngineProcess.candidates().filter { EngineProcess.read($0, config: paths.config) != nil }
+        for pid in pids {
+            // Recheck before signalling; never trust a PID file or a port alone.
+            if EngineProcess.read(pid, config: paths.config) != nil { kill(pid, SIGTERM) }
+        }
         for _ in 0..<30 {
-            if kill(pid, 0) != 0 { try? FileManager.default.removeItem(at: paths.pid); task = nil; return }
+            if pids.allSatisfy({ EngineProcess.read($0, config: paths.config) == nil }) {
+                try? FileManager.default.removeItem(at: paths.pid); task = nil; return
+            }
             Thread.sleep(forTimeInterval: 0.1)
         }
         throw LinkError.message("连接程序尚未退出，请稍后再试。系统代理已恢复，不会继续指向此程序。")

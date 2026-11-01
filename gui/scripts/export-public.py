@@ -8,7 +8,7 @@ import tempfile
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
-DIST = ROOT / "dist"
+DIST = Path(os.environ.get("GLINK_DIST_DIR", ROOT / "dist"))
 
 
 def allowed_files():
@@ -17,11 +17,12 @@ def allowed_files():
         "gui/Info.plist", "gui/README.md", "gui/先读我.txt", "gui/config.example.json",
         "gui/Sources/Core.swift", "gui/Sources/MacNetwork.swift", "gui/Sources/AppModel.swift",
         "gui/Sources/Views.swift", "gui/Sources/Main.swift", "gui/Sources/Cityscape.swift", "gui/Sources/DesignPreview.swift",
-        "gui/scripts/build.sh", "gui/scripts/design-preview.sh", "gui/scripts/package.sh", "gui/scripts/icon.swift",
-        "gui/scripts/export-public.py", "gui/tests/artifacts.py", "gui/tests/engine.py",
+        "gui/scripts/build.sh", "gui/scripts/design-preview.sh", "gui/scripts/readme-previews.py", "gui/scripts/package.sh", "gui/scripts/icon.swift",
+        "gui/scripts/export-public.py", "gui/tests/artifacts.py", "gui/tests/engine.py", "gui/tests/EngineLifecycle.swift",
         "docs/使用指南.html", "docs/assets/theme.css", "docs/assets/tutorial.js", "docs/assets/cities/shenzhen.png", "docs/assets/cities/shanghai.png",
         "docs/assets/cities/new-york.png", "docs/assets/cities/chicago.png", "docs/assets/cities/PROMPTS.txt",
         "docs/assets/setup.png", "docs/assets/connection-off.png", "docs/assets/connection-on.png", "docs/assets/recovery.png",
+        "docs/assets/demos/connection.gif", "docs/assets/demos/cities-off.gif", "docs/assets/demos/cities-on.gif",
         "bin/sing-box-source-v1.13.8.tar.gz",
         "bin/SHA256SUMS", "bin/LICENSE-sing-box.txt", "bin/来源说明.md",
         "bin/darwin-arm64/sing-box", "bin/darwin-arm64/LICENSE",

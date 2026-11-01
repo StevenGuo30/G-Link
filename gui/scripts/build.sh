@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd -P)"
 BUILD="$ROOT/gui/.build"
-DIST="$ROOT/dist"
+DIST="${GLINK_DIST_DIR:-$ROOT/dist}"
 mkdir -p "$BUILD" "$DIST"
 [[ "$(uname -s)" == Darwin ]] || { echo '需要在 Mac 上构建。' >&2; exit 1; }
 /usr/bin/xcrun --find swiftc >/dev/null
