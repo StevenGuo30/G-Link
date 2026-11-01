@@ -38,7 +38,7 @@ private enum BackdropSession {
     var hasConfig: Bool { config != nil }
     var hasPreset: Bool { presetURL != nil }
     var installed: Bool { Bundle.main.bundleURL.deletingLastPathComponent().lastPathComponent == "Applications" }
-    var appVersion: String { "0.1.3" }
+    var appVersion: String { "0.1.4" }
 
     init(preview: LinkState? = nil, previewCity: Int = 1, animatePreview: Bool = false) {
         self.animatePreview = animatePreview

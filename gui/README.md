@@ -18,6 +18,11 @@ SwiftUI 原生界面，城市建筑插画背景，每次启动随机更换城市
 当前没有 TUN、智能分流、订阅管理或按应用分流。系统代理仅影响遵循系统设置的软件。
 **本项目不提供服务器、节点或订阅服务；公开版本不包含可直接联网的私人配置。**
 
+## 下载
+
+在 [GitHub Releases](https://github.com/StevenGuo30/G-Link/releases/latest) 下载公开应用 ZIP，完整解压后打开 G-Link。
+公开应用需要自行导入有效配置；Apple Silicon 与 Intel 共用同一个包。
+
 ## 构建与运行
 
 需要 Mac、Xcode Command Line Tools（Swift 6.1 或兼容版本）。首次没有编译工具时可执行 `xcode-select --install`。
