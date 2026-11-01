@@ -30,7 +30,7 @@ def allowed_files():
 
 
 def private_values():
-    private = ROOT / "config/config.json"
+    private = Path(os.environ.get("GLINK_PRIVATE_CONFIG", str(ROOT / "config/config.json")))
     if not private.exists():
         return set()
     cfg = json.loads(private.read_text())

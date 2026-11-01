@@ -2,6 +2,7 @@
 """验证构建产物和公开/私人归档；不改动系统网络设置。"""
 import importlib.util
 import json
+import os
 from pathlib import Path
 import plistlib
 import subprocess
@@ -43,7 +44,9 @@ if private.exists():
         configurations = [n for n in archive.namelist() if n.endswith("/连接配置.qinglink") and not n.startswith("__MACOSX/")]
         assert len(configurations) == 1
         cfg = json.loads(archive.read(configurations[0]))
-        assert cfg == json.loads((root / "config/config.json").read_text())
+        source_config = Path(os.environ.get("GLINK_PRIVATE_CONFIG", str(root / "config/config.json")))
+        assert source_config.is_file(), "验证私人包需要原配置；请设置 GLINK_PRIVATE_CONFIG"
+        assert cfg == json.loads(source_config.read_text())
         assert not any("维护手册" in n for n in archive.namelist())
     print("PASS：私人分享包携带匹配的配置，不携带个人维护手册")
 
