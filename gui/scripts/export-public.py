@@ -14,11 +14,13 @@ DIST = Path(os.environ.get("GLINK_DIST_DIR", ROOT / "dist"))
 def allowed_files():
     names = [
         "LICENSE", "THIRD_PARTY_NOTICES.md", "gui/public.gitignore",
-        "gui/Info.plist", "gui/README.md", "gui/先读我.txt", "gui/config.example.json",
-        "gui/Sources/Core.swift", "gui/Sources/MacNetwork.swift", "gui/Sources/AppModel.swift",
+        "gui/Info.plist", "gui/README.md", "gui/UPDATES.md", "gui/先读我.txt", "gui/config.example.json",
+        "gui/Sources/Core.swift", "gui/Sources/MacNetwork.swift", "gui/Sources/AppModel.swift", "gui/Sources/AppUpdates.swift",
         "gui/Sources/Views.swift", "gui/Sources/Main.swift", "gui/Sources/Cityscape.swift", "gui/Sources/DesignPreview.swift",
         "gui/scripts/build.sh", "gui/scripts/design-preview.sh", "gui/scripts/readme-previews.py", "gui/scripts/package.sh", "gui/scripts/icon.swift",
         "gui/scripts/export-public.py", "gui/tests/artifacts.py", "gui/tests/engine.py", "gui/tests/EngineLifecycle.swift",
+        "gui/scripts/archive.py", "gui/scripts/prepare-sparkle.sh", "gui/scripts/update-feed.py",
+        "gui/tests/updates.py", "gui/tests/UpdateHarness.swift",
         "docs/使用指南.html", "docs/assets/theme.css", "docs/assets/tutorial.js", "docs/assets/cities/shenzhen.png", "docs/assets/cities/shanghai.png",
         "docs/assets/cities/new-york.png", "docs/assets/cities/chicago.png", "docs/assets/cities/PROMPTS.txt",
         "docs/assets/setup.png", "docs/assets/connection-off.png", "docs/assets/connection-on.png", "docs/assets/recovery.png",
@@ -27,6 +29,7 @@ def allowed_files():
         "bin/SHA256SUMS", "bin/LICENSE-sing-box.txt", "bin/来源说明.md",
         "bin/darwin-arm64/sing-box", "bin/darwin-arm64/LICENSE",
         "bin/darwin-amd64/sing-box", "bin/darwin-amd64/LICENSE",
+        "bin/sparkle/Sparkle-2.10.1.tar.xz", "bin/sparkle/SHA256SUMS", "bin/sparkle/LICENSE",
     ]
     return [ROOT / name for name in names]
 

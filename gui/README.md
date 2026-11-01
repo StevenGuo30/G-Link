@@ -12,6 +12,7 @@ SwiftUI 原生界面，城市建筑插画背景，每次启动随机更换城市
 - 首次设置、配置文件导入、添加到用户的「应用程序」文件夹。
 - 一键开启 HTTP / HTTPS / SOCKS 系统代理，关闭或退出时恢复原设置。
 - 菜单栏开关、连接检查、异常退出后的恢复入口。
+- 手动检查更新，下载验证后安装并重启，保留本机配置。
 - 本机、局域网与 Tailscale 地址绕过代理。
 - 支持 Apple Silicon 和 Intel Mac，最低 macOS 13。
 
@@ -22,6 +23,9 @@ SwiftUI 原生界面，城市建筑插画背景，每次启动随机更换城市
 
 在 [GitHub Releases](https://github.com/StevenGuo30/G-Link/releases/latest) 下载公开应用 ZIP，完整解压后打开 G-Link。
 公开应用需要自行导入有效配置；Apple Silicon 与 Intel 共用同一个包。
+
+从 0.1.6 起，可在「帮助 → 检查更新」升级。0.1.5 及更早版本需先手动安装一次。
+更新由用户主动触发，使用 GitHub 托管的已签名安装包与版本清单；[维护者发布说明](../gui/UPDATES.md)。
 
 ## 构建与运行
 

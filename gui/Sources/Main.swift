@@ -10,6 +10,9 @@ struct QingLinkApp: App {
         }
         .windowStyle(.hiddenTitleBar).defaultSize(width: 880, height: 650)
         .commands {
+            CommandGroup(after: .appInfo) {
+                Button("检查更新…") { model.checkForUpdates() }.disabled(model.busy)
+            }
             CommandGroup(replacing: .newItem) { Button("显示G-Link") { model.showWindow() }.keyboardShortcut("0") }
             CommandGroup(replacing: .help) { Button("G-Link使用指南") { model.openGuide() } }
         }
@@ -19,6 +22,7 @@ struct QingLinkApp: App {
             Button(model.state == .on ? "关闭" : model.state == .recovery ? "恢复连接" : "开启") { model.toggle() }.disabled(model.busy)
             Divider()
             Button("使用指南") { model.openGuide() }
+            Button("检查更新…") { model.checkForUpdates() }.disabled(model.busy)
             Button("退出G-Link") { NSApp.terminate(nil) }.keyboardShortcut("q")
         }
     }

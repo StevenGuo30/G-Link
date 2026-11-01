@@ -34,16 +34,17 @@ private enum BackdropSession {
     let backdropCity: Int
     private var timer: Timer?
     private var mainWindow: NSWindow?
+    private lazy var updates = AppUpdates()
     var busy: Bool { state == .busy }
     var hasConfig: Bool { config != nil }
     var hasPreset: Bool { presetURL != nil }
     var installed: Bool { Bundle.main.bundleURL.deletingLastPathComponent().lastPathComponent == "Applications" }
-    var appVersion: String { "0.1.5" }
+    var appVersion: String { Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "开发版" }
 
-    init(preview: LinkState? = nil, previewCity: Int = 1, animatePreview: Bool = false) {
+    init(preview: LinkState? = nil, previewCity: Int = 1, animatePreview: Bool = false, paths: AppPaths = .live) {
         self.animatePreview = animatePreview
         backdropCity = preview == nil ? BackdropSession.city : previewCity
-        paths = .live
+        self.paths = paths
         let binary = Bundle.main.bundleURL.appendingPathComponent("Contents/Helpers/sing-box")
         engine = Engine(paths: paths, executable: binary); network = MacNetwork(paths: paths)
         let preset = Bundle.main.bundleURL.deletingLastPathComponent().appendingPathComponent("连接配置.qinglink")
@@ -171,6 +172,12 @@ private enum BackdropSession {
     }
     func openGuide() {
         if let url = Bundle.main.url(forResource: "使用指南", withExtension: "html", subdirectory: "docs") { NSWorkspace.shared.open(url) }
+    }
+    func checkForUpdates() {
+        guard !isPreview else { return }
+        guard !busy else { message = "请等待当前操作完成，再检查更新。"; return }
+        do { try updates.check() }
+        catch { message = "暂时无法检查更新，请稍后重试。" }
     }
     func openLogs() { try? paths.prepare(); NSWorkspace.shared.open(paths.root) }
     func rememberWindow() {

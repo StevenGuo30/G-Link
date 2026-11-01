@@ -3,6 +3,14 @@
 G-Link's original GUI, scripts, documentation and architectural artwork are licensed under MIT; see [LICENSE](LICENSE).
 The MIT license does not replace the licenses of third-party files.
 
+## Sparkle 2.10.1
+
+- Project and official release: https://github.com/sparkle-project/Sparkle/releases/tag/2.10.1
+- Distribution: `bin/sparkle/Sparkle-2.10.1.tar.xz`, pinned by [SHA256](bin/sparkle/SHA256SUMS).
+- License: [Sparkle MIT license and bundled third-party notices](bin/sparkle/LICENSE).
+- The build embeds the official framework and retains its original signatures, helper tools and notices.
+- The application also includes `Contents/Resources/LICENSE-Sparkle.txt`.
+
 ## sing-box 1.13.8
 
 - Project: https://github.com/SagerNet/sing-box

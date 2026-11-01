@@ -218,6 +218,12 @@ struct HelpView: View {
             helpCard("01", "第一次被 macOS 拦截？", "确认来源可信后，到“系统设置 → 隐私与安全”允许打开。")
             helpCard("02", "开启了，应用还是打不开？", "点击“检查连接”，再用 ⌘Q 退出需要联网的应用后重开。")
             helpCard("03", "上次异常退出，网络不通？", "重新打开G-Link，点击“恢复连接”，按系统提示确认。")
+            HStack {
+                Text("G-Link \(model.appVersion)").font(.system(size: 12)).foregroundStyle(Palette.secondary)
+                Spacer()
+                Button("检查更新") { model.checkForUpdates() }
+                    .buttonStyle(.plain).font(.system(size: 12, weight: .medium)).foregroundStyle(Palette.blue).disabled(model.busy)
+            }.padding(20).background(.white, in: RoundedRectangle(cornerRadius: 16))
             HStack(spacing: 12) {
                 PrimaryButton(title: "查看教程", symbol: "book") { model.openGuide() }
                 Button("打开日志") { model.openLogs() }.buttonStyle(.plain).font(.system(size: 12)).foregroundStyle(Palette.blue)

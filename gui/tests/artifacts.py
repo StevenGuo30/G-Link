@@ -19,6 +19,11 @@ for name in ("MacOS/G-Link", "Helpers/sing-box"):
     assert str(Path.home()).encode() not in (app / "Contents" / name).read_bytes(), "应用不得泄露本机用户路径"
 info = plistlib.loads((app / "Contents/Info.plist").read_bytes())
 assert info["LSMinimumSystemVersion"] == "13.0"
+assert info["SUEnableAutomaticChecks"] is False and info["SUAutomaticallyUpdate"] is False
+assert info["SUAllowsAutomaticUpdates"] is False and info["SUEnableSystemProfiling"] is False
+assert info["SURequireSignedFeed"] is True and info["SUVerifyUpdateBeforeExtraction"] is True
+assert info["SUFeedURL"] == "https://github.com/StevenGuo30/G-Link/releases/latest/download/appcast.xml"
+assert (app / "Contents/Frameworks/Sparkle.framework/Versions/Current").is_symlink()
 subprocess.run([str(app / "Contents/MacOS/G-Link"), "--self-test"], check=True)
 assert not list(app.rglob("*.qinglink"))
 assert not list(app.rglob("config.json"))
@@ -62,3 +67,17 @@ with tempfile.TemporaryDirectory(prefix="qinglink-unzip-") as temporary:
     subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(unpacked)], check=True)
     subprocess.run([str(unpacked / "Contents/MacOS/G-Link"), "--self-test"], check=True, stdout=subprocess.DEVNULL)
 print("PASS：ZIP 解压后签名与执行权限有效")
+
+update = dist / f"G-Link-v{info['CFBundleShortVersionString']}-update.zip"
+if update.exists():
+    with zipfile.ZipFile(update) as archive:
+        assert all(name.startswith("G-Link.app/") for name in archive.namelist())
+        assert not any(name.endswith(("config.json", ".qinglink", "维护手册.html")) for name in archive.namelist())
+        for name in archive.namelist():
+            assert not any(secret in archive.read(name) for secret in secrets)
+    with tempfile.TemporaryDirectory(prefix="glink-update-unzip-") as temporary:
+        subprocess.run(["/usr/bin/ditto", "-x", "-k", str(update), temporary], check=True)
+        unpacked = Path(temporary) / "G-Link.app"
+        assert (unpacked / "Contents/Frameworks/Sparkle.framework/Versions/Current").is_symlink()
+        subprocess.run(["/usr/bin/codesign", "--verify", "--deep", "--strict", str(unpacked)], check=True)
+    print("PASS：OTA 包仅包含应用，解压后框架链接与签名完整")

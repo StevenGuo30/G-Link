@@ -2,7 +2,7 @@
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd -P)"
 mode="${1:-public}"
-case "$mode" in public|private) ;; *) echo '用法：package.sh public|private' >&2; exit 2;; esac
+case "$mode" in public|private|update) ;; *) echo '用法：package.sh public|private|update' >&2; exit 2;; esac
 DIST="${GLINK_DIST_DIR:-$ROOT/dist}"
 APP="$DIST/G-Link.app"
 [[ -d "$APP" ]] || { echo '请先运行 bash gui/scripts/build.sh' >&2; exit 1; }
@@ -12,6 +12,15 @@ trap 'rm -rf "$stage"' EXIT
 folder="$stage/G-Link"
 mkdir -p "$folder"
 /usr/bin/ditto "$APP" "$folder/G-Link.app"
+if [[ "$mode" == update ]]; then
+  version="$(/usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' "$APP/Contents/Info.plist")"
+  name="G-Link-v${version}-update.zip"
+  python3 "$ROOT/gui/scripts/archive.py" "$folder/G-Link.app" "$stage/$name"
+  chmod 600 "$stage/$name"
+  mv -f "$stage/$name" "$DIST/$name"
+  printf '已生成 OTA 应用包：%s\n' "$DIST/$name"
+  exit 0
+fi
 /usr/bin/ditto "$ROOT/docs" "$folder/教程"
 cp "$ROOT/gui/先读我.txt" "$folder/先读我.txt"
 if [[ "$mode" == private ]]; then
@@ -25,17 +34,7 @@ else
   name=G-Link-公开应用.zip
 fi
 # zipfile 为中文路径写入 UTF-8 标记，避免 ditto ZIP 被跨平台工具读成乱码。
-python3 - "$folder" "$stage/$name" <<'PY'
-from pathlib import Path
-import sys, zipfile
-folder, destination = map(Path, sys.argv[1:])
-with zipfile.ZipFile(destination, 'w', zipfile.ZIP_DEFLATED) as archive:
-    for path in sorted(folder.rglob('*')):
-        if path.is_symlink():
-            raise SystemExit('不允许在应用包中意外引入符号链接')
-        if path.is_file():
-            archive.write(path, Path(folder.name) / path.relative_to(folder))
-PY
+python3 "$ROOT/gui/scripts/archive.py" "$folder" "$stage/$name"
 chmod 600 "$stage/$name"
 mv -f "$stage/$name" "$DIST/$name"
 printf '已生成：%s\n' "$DIST/$name"

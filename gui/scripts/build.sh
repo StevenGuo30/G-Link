@@ -7,15 +7,18 @@ mkdir -p "$BUILD" "$DIST"
 [[ "$(uname -s)" == Darwin ]] || { echo '需要在 Mac 上构建。' >&2; exit 1; }
 /usr/bin/xcrun --find swiftc >/dev/null
 (cd "$ROOT" && /usr/bin/shasum -a 256 -c bin/SHA256SUMS)
+bash "$ROOT/gui/scripts/prepare-sparkle.sh"
 stage="$(mktemp -d "$DIST/.qinglink-build.XXXXXX")"
 trap 'rm -rf "$stage"' EXIT
 APP="$stage/G-Link.app"
-mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Helpers" "$APP/Contents/Resources/docs/assets"
+mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Helpers" "$APP/Contents/Resources/docs/assets" "$APP/Contents/Frameworks"
+/usr/bin/ditto "$BUILD/sparkle/Sparkle.framework" "$APP/Contents/Frameworks/Sparkle.framework"
 for arch in arm64 x86_64; do
   printf '正在编译 %s…\n' "$arch"
   /usr/bin/xcrun swiftc -swift-version 5 -target "$arch-apple-macos13.0" -O \
     "$ROOT"/gui/Sources/*.swift -o "$BUILD/QingLink-$arch" \
-    -framework SwiftUI -framework AppKit -framework SystemConfiguration -framework Security
+    -framework SwiftUI -framework AppKit -framework SystemConfiguration -framework Security \
+    -F "$BUILD/sparkle" -framework Sparkle -Xlinker -rpath -Xlinker @executable_path/../Frameworks
 done
 /usr/bin/lipo -create "$BUILD/QingLink-arm64" "$BUILD/QingLink-x86_64" -output "$APP/Contents/MacOS/G-Link"
 /usr/bin/lipo -create "$ROOT/bin/darwin-arm64/sing-box" "$ROOT/bin/darwin-amd64/sing-box" -output "$APP/Contents/Helpers/sing-box"
@@ -23,6 +26,7 @@ done
 /usr/bin/codesign --force --sign - "$APP/Contents/Helpers/sing-box"
 cp "$ROOT/gui/Info.plist" "$APP/Contents/Info.plist"
 cp "$ROOT/LICENSE" "$APP/Contents/Resources/LICENSE-G-Link.txt"
+cp "$ROOT/bin/sparkle/LICENSE" "$APP/Contents/Resources/LICENSE-Sparkle.txt"
 cp "$ROOT/THIRD_PARTY_NOTICES.md" "$APP/Contents/Resources/THIRD_PARTY_NOTICES.md"
 cp "$ROOT/bin/sing-box-source-v1.13.8.tar.gz" "$APP/Contents/Resources/sing-box-source-v1.13.8.tar.gz"
 cp "$ROOT/bin/LICENSE-sing-box.txt" "$APP/Contents/Resources/LICENSE-sing-box.txt"
